@@ -31,11 +31,11 @@ class Matematica:
         if delta <= -1:
             x1 = (-self.b + self.sqrt(self.v_a(self.delta())) * 1j) / (2 * self.a)
             x2 = (-self.b - self.sqrt(self.v_a(self.delta())) * 1j) / (2 * self.a)
-            print(f"x1 = {str(x1)} x2 = {str(x2)}")
+            print(f"\033[01;32mx1 = {str(x1)} x2 = {str(x2)}\033[m")
         elif delta >= 1:
             r1 = (-self.b + self.sqrt(delta)) / (2 * self.a)
             r2 = (-self.b - self.sqrt(delta)) / (2 * self.a)
-            print(f"x1 = {str(r1)} x2 = {str(r2)}")
+            print(f"\033[01;32mx1 = {str(r1)} x2 = {str(r2)}\033[m")
 
 if __name__ == "__main__":
     a = int(input("Digite o coeficiente a:"))
