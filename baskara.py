@@ -32,6 +32,9 @@ class Matematica:
             x1 = (-self.b + self.sqrt(self.v_a(self.delta())) * 1j) / (2 * self.a)
             x2 = (-self.b - self.sqrt(self.v_a(self.delta())) * 1j) / (2 * self.a)
             print(f"\033[01;32mx1 = {str(x1)} x2 = {str(x2)}\033[m")
+        elif delta == 0:
+            x = -self.b / (2 * self.a)
+            print(f"\033[01;32mx = {x}\033[m")
         elif delta >= 1:
             r1 = (-self.b + self.sqrt(delta)) / (2 * self.a)
             r2 = (-self.b - self.sqrt(delta)) / (2 * self.a)
