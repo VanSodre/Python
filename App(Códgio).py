@@ -3,6 +3,10 @@ from random import *
 from PYTHON.baskara import Matematica
 import os
 class App:
+    '''
+    Precisa antes criar os arquvios chamados: App(lista_dados).txt e o arquivo App(lista_hash).txt
+    Exemplo de como usar: <nome_variavel> = App(), <nome_variavel>.menu()
+    '''
     def __init__(self):
         pass
     
