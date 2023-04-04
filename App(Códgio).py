@@ -20,7 +20,7 @@ class App:
         while True:
             try:
                 self.nome("MENU")
-                opcoes = input("\033[01;37m[1] Jogo de adivinhar\n[2] Calculadore de equações de 2 grau\n[3] Sair\n")
+                opcoes = input("\033[01;37m[1] Jogo de adivinhar\n[2] Calculadora de equações de 2 grau\n[3] Sair\n")
                 if opcoes == "1":
                     self.nome("Jogo de adivinhar")
                     self.dificuldade = int(input("[1] Fácil\n[2] Médio\n[3] Difícil\n[4] Impossivel\n"))
