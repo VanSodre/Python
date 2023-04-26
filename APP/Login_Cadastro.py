@@ -1,89 +1,158 @@
 from sqlite3 import *
-import getpass
-from os import system
 from time import *
-from hashlib import *
-from googletrans import *
+from os import system
 
-class Sistema:
-    def __init__(self, nome_database:str="banco_dados_login", nome_tabela:str="tabela_dados") -> None:
+class Connect:
+    
+    def __init__(self, nome_database:str, nome_tabela:str):
         self.nome_database = nome_database
-        self.nome_tabela = nome_tabela   
-        if len(self.nome_database.strip()) == 0 or len(self.nome_tabela.strip()) == 0:
-            self.nome_database = "banco_dados_login"
-            self.nome_tabela = "tabela_dados"  
+        self.nome_tabela = nome_tabela
+        if nome_database == "" and nome_tabela == "":
+            self.nome_database = "banco"
+            self.nome_tabela = "tabela"
             
         self.conn = connect(f"{self.nome_database}.db")
         self.c = self.conn.cursor()
-            
-        self.__tabela()
-        
-    def __tabela(self):
         c = self.c
         c.execute(f"CREATE TABLE IF NOT EXISTS {self.nome_tabela} (usuario TEXT, senha TEXT, id INTEGER PRIMARY KEY AUTOINCREMENT);")
-        c.execute(f"CREATE TABLE IF NOT EXISTS tabela_senhas (senha TEXT, id INTEGER PRIMARY KEY AUTOINCREMENT);")
+
+    def verificar_cadastro(self, usuario:str, senha:str):
+        c = self.c
+        if len(usuario.strip()) >= 8 and len(senha.strip()) >= 8:
+            c.execute(f"SELECT * FROM {self.nome_tabela} WHERE usuario=? AND senha=?", (usuario, senha))            
+            registros = c.fetchall()
+            if len(registros) == 0:
+                return True  
+            else:
+                return False
+        else:
+            return False
         
+    def verificar_outros(self, usuario:str, senha:str, id:int):
+        c = self.c
+        if len(usuario) >= 8 and len(senha) >= 8 and len(str(id)) >= 1:
+            c.execute(f"SELECT * FROM {self.nome_tabela} WHERE usuario=? AND senha=? AND id=?", (usuario, senha, id))            
+            registros = c.fetchall()
+            if registros:
+                return True  
+            else:
+                return False
+        else:
+            return False        
+    
+class SistemaPrincipal(Connect):
+    """Como usar:
+    obj = SistemaPrincipal("<nome_banco_dados>", "<nome_tabela>")
+    obj.menu()"""
+    print("\033[01;37m")
     def __titulo(self, nome_titulo:str):
-        input("")
         system("cls")
-        print("\033[01;34m-"*42)
+        print("-"*42)
         print(nome_titulo.center(42))
-        print("\033[01;34m-\033[m"*42)      
-        
-    def __criptografia(self, *args:str):
-        cripto_hash = []
-        for entrada in args:
-            entrada_bytes = entrada.encode("utf-8")
-            hash_object = sha256(entrada_bytes)
-            cripto_hash.append(hash_object.hexdigest())
-            
-        return cripto_hash
+        print("-"*42)
     
-    def __mostrar_senhas(self, id):
-        c = self.c
-        c.execute(f"SELECT * FROM tabela_senhas WHERE id=?", (id, ))
-        mostrar = c.fetchone()
-        if mostrar is not None:
-            print(f"Sua senha é: {mostrar[0]}")   
+    def menu(self):
+        r = False
+        while r == False:  
+            system("cls")
+            try: 
+                print("BEM VINDO")
+                escolha = int(input("Suas opções são:\n[1] = Cadastro\n[2] = Login\n[3] = Ver dados\n[4] = Atualizar dados\n[5] = Apagar dados\n[6] = Sair\n "))
+                if escolha >= 7 or escolha <= 0:
+                    print("Escolha inválida!")
+                elif escolha == 1:
+                    self.cadastro()                    
+                elif escolha == 2:
+                    self.login()
+                elif escolha == 3:
+                    self.mostrar_dados()
+                elif escolha == 4:
+                    self.atualizar_dados()
+                elif escolha == 5:
+                    self.apagar_dados()
+                elif escolha == 6:
+                    r = True
+                    break
+                
+            except ValueError:                
+                print(f"Você digitou um caracter inválido!")
+                
             
-    def fechar_conexao(self):
-        c = self.c
-        conn = self.c
-        c.close()
-        conn.close()       
-    
-    def login(self):
-        c = self.c
-        self.__titulo("LOGIN")
-        usuario = str(input("Digite o nome de usuario: "))
-        senha = str(input("Digite a sua senha: "))
-        id =  int(input("Digite o id fornecido no cadastro: "))
-        dados = self.__criptografia(usuario, senha)
-        c.execute(f"SELECT * FROM {self.nome_tabela} WHERE usuario=? AND senha=? AND id=?", (dados[0], dados[1], id,))
-        result = c.fetchone()
-        if result is not None:
-            print("Login bem sucedido.")
-            self.__mostrar_senhas(id)
-            
+            input("")
     
     def cadastro(self):
-        c = self.c
-        conn = self.conn
         self.__titulo("CADASTRO")
-        usuario = str(input("Digite o nome de usuario a ser cadastrado: "))
-        senha = getpass.getpass("Digite a senha a ser cadastrada: ")
-        dados = self.__criptografia(usuario, senha)
-        if len(usuario.strip()) >= 8 and len(str(senha).strip()) >= 8:
-            c.execute(f"INSERT INTO {self.nome_tabela} (usuario, senha) VALUES (?, ?)", (dados[0], dados[1], ))
-            c.execute("INSERT INTO tabela_senhas (senha) VALUES (?)", (senha, ))
+        c, conn = self.c, self.conn
+        usuario = str(input("Digite seu nome de usurio: ")).strip()
+        senha = str(input("Digite a senha a ser cadastrada: ")).strip()
+        if self.verificar_cadastro(usuario, senha):
+            print("Cadastro bem sucedido..")
+            c.execute(f"INSERT INTO {self.nome_tabela} (usuario, senha) VALUES (?, ?)", (usuario, senha, )) 
             conn.commit()
             c.execute(f"SELECT * FROM {self.nome_tabela} ORDER BY id DESC LIMIT 1")
             ultimo_id = c.fetchone()
             if ultimo_id:
-                print(f"O nome:{usuario}\nE senha:{senha}\nFoi cadastrado com o id:{ultimo_id[2]}")
-                     
- 
-j = Sistema()
-j.cadastro()
-j.login()
-j.fechar_conexao()
+                print(f"Você foi cadastrado com o id:{ultimo_id[2]}\nGuarde esse id, pois vai ser usado na hora do cadastro..")
+        else:
+            print("Falha no cadastro\nPossiveis falhas:\nVocÊ digitou um nome de usuario ou senha muito curtos, os nome de usuairo ou senha devem possuir pelo menos 8 caracteres\nOutro erro pode ser que o o nome de usuario ou senha já estão cadastrados!")
+            if input("Deseja ser redirecionado ao login [S/N]? ").strip().upper()[0] == "S":
+                self.login()      
+        
+    def login(self):
+        self.__titulo("LOGIN")
+        usuario = str(input("Digite o seu nome de usuario para fazer login: ")).strip()
+        senha = str(input("Digite a sua senha para fazer login: ")).strip()
+        id = int(input("Digite o seu id em que os dados inseridos acima foram cadastrados: "))
+        if self.verificar_outros(usuario, senha, id):
+            print("Login bem sucedido!")
+        else:
+            print("Falha no login!")
+    
+    def atualizar_dados(self):        
+        self.__titulo("ATUALIZAR DADOS")
+        c, conn = self.c,self.conn
+        usuario = str(input("Digite o seu nome de usuario a ser atualizado: "))
+        senha = str(input("Digite a sua senha a ser atualizada: "))
+        id = int(input("Digite o seu id em que os dados inseridos acima foram cadastrados: "))
+        if self.verificar_outros(usuario, senha, id):
+            self.__titulo("NOVOS DADOS")
+            novo_usuario = str(input("Digite o novo nome de usuario: ")).strip()
+            novo_senha = str(input("Digite a nova senha: ")).strip()
+            c.execute(f"UPDATE {self.nome_tabela} SET usuario=?, senha=? WHERE id=?", (novo_usuario, novo_senha, id))
+            conn.commit()
+            print("Dados atualizados com sucesso!")
+        else:
+            print("Dados inválidos")
+    
+    def apagar_dados(self):      
+        self.__titulo("APAGAR DADOS")  
+        c, conn = self.c,self.conn
+        usuario = str(input("Digite o seu nome de usuario a ser apagado: "))
+        senha = str(input("Digite a sua senha a senha a ser apagada: "))
+        id = int(input("Digite o seu id em que os dados inseridos acima foram cadastrados: "))
+        if self.verificar_outros(usuario, senha, id):
+            c.execute(f"DELETE FROM {self.nome_tabela} WHERE id=?", (id,))
+            conn.commit()
+            print("Dados apagados com sucesso!")
+        else:
+            print("Dados inválidos")
+    
+    def mostrar_dados(self):
+        self.__titulo("VER DADOS")
+        c = self.c
+        id = int(input("Digite o id dos dados que deseja ver: "))
+        c.execute(f"SELECT * FROM {self.nome_tabela} WHERE id=?", (id, ))
+        result = c.fetchone()
+        if result is not None:
+            print(f"Seus dados são:\nNome:{result[0]}\nSenha:{result[1]}\nId:{result[2]}")
+            
+        else:
+            print("Ocorreu um erro\nTente mas tarde...")
+            
+    print("\033[01;37m\033[m")
+
+if __name__ == "__main__":    
+    obj = SistemaPrincipal("", "")
+    obj.menu()
+
+
